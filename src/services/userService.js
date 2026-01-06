@@ -28,7 +28,7 @@ const userService = {
   },
 
   /**
-   * Créer un utilisateur admin
+   * Créer un utilisateur admin/responsable (UNIFIÉ)
    */
   createAdminUser: async (userData) => {
     try {
@@ -40,11 +40,23 @@ const userService = {
   },
 
   /**
+   * Lister les filières (pour création responsable filière)
+   */
+  getFilieres: async () => {
+    try {
+      const response = await api.get('/auth/filieres/');
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { error: 'Erreur lors de la récupération des filières' };
+    }
+  },
+
+  /**
    * Mettre à jour un utilisateur
    */
   updateUser: async (userId, userData) => {
     try {
-      const response = await api.put(`/auth/users/${userId}/update/`, userData);
+      const response = await api.put(`/auth/users/${userId}/`, userData);
       return response.data;
     } catch (error) {
       throw error.response?.data || { error: 'Erreur lors de la modification de l\'utilisateur' };
@@ -78,12 +90,15 @@ const userService = {
   },
 
   /**
-   * Supprimer un utilisateur
+   * Supprimer un utilisateur (CORRIGÉ)
    */
-  deleteUser: async (userId, confirmation, raison) => {
+  deleteUser: async (userId, confirmation) => {
     try {
-      const response = await api.delete(`/auth/users/${userId}/delete/`, {
-        data: { confirmation, raison }
+      const response = await api.delete('/auth/users/delete/', {
+        data: { 
+          user_id: userId,
+          confirmation 
+        }
       });
       return response.data;
     } catch (error) {

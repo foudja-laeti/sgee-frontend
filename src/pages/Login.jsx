@@ -1,11 +1,13 @@
+// src/pages/Login.jsx
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ShieldCheck, User, Lock, Hash, ArrowRight, GraduationCap } from 'lucide-react';
-import authService from '../services/authService';
+import { useAuth } from '../contexts/AuthContext'; // ✅ Utiliser le contexte
 import Loader from '../components/common/Loader';
 
 const Login = () => {
   const navigate = useNavigate();
+  const { login } = useAuth(); // ✅ Utiliser la fonction login du contexte
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [formData, setFormData] = useState({ email: '', password: '', code_quitus: '' });
@@ -19,11 +21,32 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setError('');
+
     try {
-      const response = await authService.login(formData.email, formData.password, formData.code_quitus || null);
-      response.user.role === 'admin' ? navigate('/admin-dashboard') : navigate('/home');
+      // ✅ Utiliser la fonction login du contexte qui gère la redirection
+      const result = await login(
+        formData.email, 
+        formData.password, 
+        formData.code_quitus || null
+      );
+
+      if (!result.success) {
+        // Afficher l'erreur
+        const errorMessage = result.error?.non_field_errors?.[0] 
+          || result.error?.email?.[0] 
+          || result.error?.password?.[0]
+          || result.error?.code_quitus?.[0]
+          || result.error?.error
+          || result.error?.detail
+          || 'Identifiants ou code invalides';
+        
+        setError(errorMessage);
+      }
+      // La redirection est gérée automatiquement dans AuthContext.login()
     } catch (err) {
-      setError('Identifiants ou code invalides');
+      console.error('Erreur login:', err);
+      setError('Erreur lors de la connexion');
     } finally {
       setLoading(false);
     }
@@ -61,12 +84,18 @@ const Login = () => {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            {error && <div className="text-red-600 text-xs text-center font-medium bg-red-50 p-2 rounded border border-red-100">{error}</div>}
+            {error && (
+              <div className="text-red-600 text-xs text-center font-medium bg-red-50 p-3 rounded-lg border border-red-200">
+                {error}
+              </div>
+            )}
 
             <div className="space-y-4">
               {/* Email */}
               <div className="px-4">
-                <label className="text-sm font-medium text-gray-700 ml-1 mb-1.5 block">Email Académique</label>
+                <label className="text-sm font-medium text-gray-700 ml-1 mb-1.5 block">
+                  Email Académique
+                </label>
                 <div className="relative group">
                   <User className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
                   <input
@@ -83,7 +112,9 @@ const Login = () => {
 
               {/* Mot de passe */}
               <div className="px-4">
-                <label className="text-sm font-medium text-gray-700 ml-1 mb-1.5 block">Mot de passe</label>
+                <label className="text-sm font-medium text-gray-700 ml-1 mb-1.5 block">
+                  Mot de passe
+                </label>
                 <div className="relative group">
                   <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
                   <input
@@ -101,8 +132,12 @@ const Login = () => {
               {/* Code Quitus */}
               <div className="px-4">
                 <div className="flex justify-between items-center mb-1.5 px-1">
-                  <label className="text-sm font-medium text-gray-700 block">Code Quitus</label>
-                  <span className="text-[10px] text-indigo-600 font-bold uppercase tracking-tight">Candidat uniquement</span>
+                  <label className="text-sm font-medium text-gray-700 block">
+                    Code Quitus
+                  </label>
+                  <span className="text-[10px] text-indigo-600 font-bold uppercase tracking-tight">
+                    Candidat uniquement
+                  </span>
                 </div>
                 <div className="flex items-center bg-indigo-50/50 rounded-xl border border-indigo-100 px-5 py-2.5 shadow-sm">
                   <Hash size={16} className="text-indigo-400 mr-4" />
@@ -123,9 +158,11 @@ const Login = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-xl font-bold text-sm transition-all shadow-lg shadow-indigo-200 flex items-center justify-center gap-2"
+                className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-white py-3 rounded-xl font-bold text-sm transition-all shadow-lg shadow-indigo-200 flex items-center justify-center gap-2"
               >
-                {loading ? <Loader size="sm" /> : (
+                {loading ? (
+                  <Loader size="sm" />
+                ) : (
                   <>
                     Valider l'Accès
                     <ArrowRight size={16} />
@@ -145,7 +182,9 @@ const Login = () => {
               
               <div className="flex items-center gap-2 opacity-40">
                 <ShieldCheck size={12} className="text-gray-900" />
-                <span className="text-[10px] font-bold text-gray-900 uppercase tracking-tight">Portail Sécurisé SGEE</span>
+                <span className="text-[10px] font-bold text-gray-900 uppercase tracking-tight">
+                  Portail Sécurisé SGEE
+                </span>
               </div>
             </div>
           </form>

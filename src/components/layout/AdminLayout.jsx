@@ -3,10 +3,10 @@ import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { 
   Home, Users, BarChart3, FileText, Settings, 
-  LogOut, Menu, X, UserCircle, Shield 
+  LogOut, Menu, X, UserCircle, Shield, GraduationCap 
 } from 'lucide-react';
-import { useAuth } from '../../contexts/AuthContext'; // ⚠️ Corrigé de contexts -> context
-import { ROUTES, ROLE_LABELS } from '../../utils/constants';
+import { useAuth } from '../../contexts/AuthContext';
+import { ROLE_LABELS } from '../../utils/constants';
 
 const AdminLayout = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -19,14 +19,28 @@ const AdminLayout = ({ children }) => {
     navigate('/login');
   };
 
-  const navigation = [
-    { name: 'Tableau de bord', href: ROUTES.ADMIN_DASHBOARD, icon: Home },
-    { name: 'Utilisateurs', href: ROUTES.ADMIN_USERS, icon: Users },
-    { name: 'Statistiques', href: ROUTES.ADMIN_STATISTICS, icon: BarChart3 },
-    { name: 'Logs', href: ROUTES.ADMIN_LOGS, icon: FileText },
-  ];
+  // 🆕 Menu dynamique selon le rôle
+  const getNavigation = () => {
+    if (user?.role === 'responsable_filiere') {
+      return [
+        { name: 'Tableau de bord', href: '/respfiliere/dashboard', icon: Home },
+        { name: 'Candidats', href: '/respfiliere/candidats', icon: Users },
+        { name: 'Statistiques', href: '/respfiliere/statistics', icon: BarChart3 },
+        { name: 'Mon-profil', href: '/respfiliere/Mon-profil', icon: Users },
+        { name: 'profil-filiere', href: '/respfiliere/profil-filiere', icon: GraduationCap },
+      ];
+    }
+    
+    // Menu Admin par défaut (super_admin + admin_academique)
+    return [
+      { name: 'Tableau de bord', href: '/admin/dashboard', icon: Home },
+      { name: 'Utilisateurs', href: '/admin/users', icon: Users },
+      { name: 'Statistiques', href: '/admin/statistics', icon: BarChart3 },
+      { name: 'Logs', href: '/admin/logs', icon: FileText },
+    ];
+  };
 
-  const isActive = (path) => location.pathname === path;
+  const navigation = getNavigation();
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -36,7 +50,7 @@ const AdminLayout = ({ children }) => {
           <div className="fixed inset-y-0 left-0 w-64 bg-white shadow-xl">
             <SidebarContent 
               navigation={navigation} 
-              isActive={isActive}
+              location={location}
               user={user}
               onClose={() => setSidebarOpen(false)}
               onLogout={handleLogout}
@@ -49,7 +63,7 @@ const AdminLayout = ({ children }) => {
         <div className="flex flex-col flex-grow bg-white border-r border-gray-200">
           <SidebarContent 
             navigation={navigation} 
-            isActive={isActive}
+            location={location}
             user={user}
             onLogout={handleLogout}
           />
@@ -62,7 +76,9 @@ const AdminLayout = ({ children }) => {
             <button onClick={() => setSidebarOpen(true)} className="text-gray-500">
               <Menu className="w-6 h-6" />
             </button>
-            <h1 className="text-lg font-bold text-gray-900">SGEE Admin</h1>
+            <h1 className="text-lg font-bold text-gray-900">
+              {user?.role === 'responsable_filiere' ? 'SGEE - Resp. Filière' : 'SGEE Admin'}
+            </h1>
             <div className="w-6" />
           </div>
         </div>
@@ -77,7 +93,7 @@ const AdminLayout = ({ children }) => {
   );
 };
 
-const SidebarContent = ({ navigation, isActive, user, onClose, onLogout }) => (
+const SidebarContent = ({ navigation, location, user, onClose, onLogout }) => (
   <>
     <div className="flex flex-col flex-grow pt-5 pb-4 overflow-y-auto">
       <div className="flex items-center justify-between flex-shrink-0 px-4">
@@ -97,33 +113,37 @@ const SidebarContent = ({ navigation, isActive, user, onClose, onLogout }) => (
           <UserCircle className="w-10 h-10 text-indigo-600" />
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold text-gray-900 truncate">
-              {user?.nom} {user?.prenom}
+              {user?.prenom} {user?.nom}
             </p>
             <p className="text-xs text-indigo-600 truncate">
               {ROLE_LABELS[user?.role]}
             </p>
+            {/* 🆕 Afficher la filière pour responsable_filiere */}
+            {user?.role === 'responsable_filiere' && user?.filiere && (
+              <p className="text-xs text-gray-500 truncate mt-0.5">
+                {user.filiere.nom}
+              </p>
+            )}
           </div>
         </div>
       </div>
 
-      <nav className="mt-6 flex-1 space-y-1 px-3">
+      <nav className="mt-8 px-4 space-y-2">
         {navigation.map((item) => {
-          const Icon = item.icon;
-          const active = isActive(item.href);
+          const active = location.pathname === item.href;
           return (
             <Link
               key={item.name}
               to={item.href}
-              className={`
-                group flex items-center px-3 py-3 text-sm font-medium rounded-xl transition-all
-                ${active 
-                  ? 'bg-indigo-600 text-white' 
-                  : 'text-gray-700 hover:bg-gray-100'
-                }
-              `}
+              className={`flex items-center px-4 py-3 rounded-xl transition-all ${
+                active 
+                  ? 'bg-blue-500 text-white shadow-lg' 
+                  : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
+              }`}
+              onClick={onClose}
             >
-              <Icon className={`mr-3 w-5 h-5 flex-shrink-0 ${active ? 'text-white' : 'text-gray-400 group-hover:text-gray-500'}`} />
-              {item.name}
+              <item.icon className="w-5 h-5 mr-3" />
+              <span>{item.name}</span>
             </Link>
           );
         })}

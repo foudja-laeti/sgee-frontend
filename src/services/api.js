@@ -1,7 +1,4 @@
-/**
- * Service API - Configuration Axios pour communiquer avec Django Backend
- */
-
+// src/services/api.js
 import axios from 'axios';
 import { API_URL } from '../utils/constants';
 
@@ -32,6 +29,14 @@ api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
+
+    // ✅ NE PAS INTERCEPTER LES ROUTES D'AUTH
+    const authRoutes = ['/auth/login/', '/auth/register/', '/auth/refresh/', '/auth/verify-quitus/'];
+    const isAuthRoute = authRoutes.some(route => originalRequest.url?.includes(route));
+    
+    if (isAuthRoute) {
+      return Promise.reject(error);
+    }
 
     // Si erreur 401 et pas déjà tenté de refresh
     if (error.response?.status === 401 && !originalRequest._retry) {

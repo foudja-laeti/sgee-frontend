@@ -1,12 +1,7 @@
-/**
- * Contexte d'authentification
- * Gère l'état global de l'utilisateur connecté
- */
-
+// src/contexts/AuthContext.jsx
 import { createContext, useContext, useState, useEffect } from 'react';
 import authService from '../services/authService';
 import { useNavigate } from 'react-router-dom';
-import toast from 'react-hot-toast';
 
 const AuthContext = createContext(null);
 
@@ -16,7 +11,6 @@ export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const navigate = useNavigate();
 
-  // Vérifier l'authentification au chargement
   useEffect(() => {
     checkAuth();
   }, []);
@@ -40,79 +34,85 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  /**
-   * Connexion
-   */
-  const login = async (credentials) => {
+  const login = async (email, password, codeQuitus = null) => {
     try {
-      const { user: userData } = await authService.login(credentials);
-      setUser(userData);
+      const authResult = await authService.login(email, password, codeQuitus);
+      
+      if (!authResult.success) {
+        return { success: false, error: authResult.error };
+      }
+
+      const apiUser = authResult.data.user;
+      console.log('👤 User après login:', apiUser);
+      
+      setUser(apiUser);
       setIsAuthenticated(true);
       
-      toast.success('Connexion réussie !');
+      // ✅ Redirection selon le rôle
+      const userRole = apiUser?.role;
+      console.log('🎭 Role détecté:', userRole);
       
-      // Rediriger selon le rôle
-      if (userData.role === 'admin') {
-        navigate('/admin/dashboard');
-      } else {
-        navigate('/candidat/dashboard');
+      if (['super_admin', 'admin_academique'].includes(userRole)) {
+        console.log('➡️ Redirection vers /admin/dashboard');
+        navigate('/admin/dashboard', { replace: true });
+      } else if (userRole === 'candidat') {
+        console.log('➡️ Redirection vers /home');
+        navigate('/home', { replace: true });
+      } else if (userRole === 'responsable_filiere') {
+  console.log('➡️ Redirection vers /respfiliere/dashboard');
+  navigate('/respfiliere/dashboard', { replace: true });  // ← BONNE ROUTE
+} else {
+        console.warn('⚠️ Rôle inconnu:', userRole);
       }
-      
-      return { success: true };
+       
+      return { success: true, user: apiUser };
     } catch (error) {
-      toast.error(error.message || 'Erreur de connexion');
-      return { success: false, error };
+      console.error('❌ Erreur login context:', error);
+      return { success: false, error: error.message || 'Erreur de connexion' };
     }
   };
 
-  /**
-   * Inscription
-   */
   const register = async (userData) => {
     try {
-      const { user: newUser } = await authService.register(userData);
-      setUser(newUser);
-      setIsAuthenticated(true);
+      const response = await authService.register(userData);
       
-      toast.success('Inscription réussie ! Bienvenue !');
-      navigate('/candidat/dashboard');
-      
-      return { success: true };
+      if (response.success) {
+        setUser(response.data.user);
+        setIsAuthenticated(true);
+        navigate('/home', { replace: true });
+        return { success: true };
+      } else {
+        return { success: false, error: response.error };
+      }
     } catch (error) {
-      toast.error(error.message || 'Erreur lors de l\'inscription');
-      return { success: false, error };
+      console.error('Erreur inscription:', error);
+      return { success: false, error: error.message || 'Erreur d\'inscription' };
     }
   };
 
-  /**
-   * Déconnexion
-   */
   const logout = async () => {
     try {
       await authService.logout();
-      setUser(null);
-      setIsAuthenticated(false);
-      toast.success('Déconnexion réussie');
-      navigate('/login');
     } catch (error) {
       console.error('Erreur lors de la déconnexion:', error);
-      // Déconnecter quand même côté client
+    } finally {
       setUser(null);
       setIsAuthenticated(false);
-      navigate('/login');
+      navigate('/login', { replace: true });
     }
   };
 
-  /**
-   * Mettre à jour le profil
-   */
   const updateProfile = async () => {
     try {
-      const userData = await authService.getProfile();
-      setUser(userData);
-      return { success: true, user: userData };
+      const response = await authService.getProfile();
+      if (response.success) {
+        setUser(response.data);
+        return { success: true, user: response.data };
+      } else {
+        return { success: false, error: response.error };
+      }
     } catch (error) {
-      return { success: false, error };
+      return { success: false, error: error.message || 'Erreur de mise à jour' };
     }
   };
 
@@ -130,7 +130,6 @@ export const AuthProvider = ({ children }) => {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
-// Hook personnalisé pour utiliser le contexte
 export const useAuth = () => {
   const context = useContext(AuthContext);
   
