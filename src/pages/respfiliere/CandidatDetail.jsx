@@ -29,7 +29,7 @@ const CandidatDetail = () => {
       setLoading(true);
       console.log(`📋 Chargement candidat ${id}...`);
       
-      const response = await api.get(`/candidats/respfiliere/${id}/candidat-detail/`);
+       const response = await api.get(`/candidats/respfiliere/${id}/candidat_detail/`);
       console.log('✅ Candidat reçu:', response.data);
       
       setCandidat(response.data);
@@ -52,20 +52,20 @@ const CandidatDetail = () => {
       setProcessing(true);
       console.log(`✅ Validation dossier ${id}...`);
       
-      const response = await api.post(`/candidats/respfiliere/${id}/valider-dossier/`);
-      console.log('✅ Dossier validé:', response.data);
-      
-      alert('✅ Dossier validé avec succès ! Un email a été envoyé au candidat.');
-      setShowValidateModal(false);
-      fetchCandidatDetail();
-    } catch (error) {
-      console.error('❌ Erreur validation:', error);
-      alert(error.response?.data?.error || 'Erreur lors de la validation');
-    } finally {
-      setProcessing(false);
-    }
-  };
-
+       const response = await api.post(`/candidats/respfiliere/${id}/valider_dossier/`);
+    
+    console.log('✅ Dossier validé:', response.data);
+    
+    alert('✅ Dossier validé avec succès ! Un email a été envoyé au candidat.');
+    setShowValidateModal(false);
+    fetchCandidatDetail();
+  } catch (error) {
+    console.error('❌ Erreur validation:', error);
+    alert(error.response?.data?.error || 'Erreur lors de la validation');
+  } finally {
+    setProcessing(false);
+  }
+};
   const handleReject = async () => {
     if (!motifRejet.trim()) {
       alert('⚠️ Le motif de rejet est obligatoire');
@@ -76,9 +76,9 @@ const CandidatDetail = () => {
       setProcessing(true);
       console.log(`❌ Rejet dossier ${id}...`);
       
-      const response = await api.post(`/candidats/respfiliere/${id}/rejeter-dossier/`, {
-        motif: motifRejet
-      });
+       const response = await api.post(`/candidats/respfiliere/${id}/rejeter_dossier/`, {
+      motif: motifRejet
+    });
       console.log('✅ Dossier rejeté:', response.data);
       
       alert('✅ Dossier rejeté avec succès. Un email a été envoyé au candidat.');

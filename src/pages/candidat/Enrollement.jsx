@@ -779,6 +779,7 @@ const Enrollement = () => {
           </div>
           <h2 className="text-2xl font-bold text-gray-900 mb-3">Dossier envoyé !</h2>
           <p className="text-gray-600 mb-6">Votre inscription a été enregistrée avec succès.</p>
+          <p className="text-gray-600 mb-6">Vous recevrez la un email de réponse dans les 24h à 72h prochaines heures.</p>
           <button onClick={() => navigate('/home')} className="w-full px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
             Retour à l'accueil
           </button>
