@@ -27,6 +27,14 @@ export const ROUTES = {
   
   // Candidat routes
   CANDIDAT_HOME: '/home',
+
+  //admin academique routes
+  // 🆕 Responsable Filière routes
+  ADMINACADEMIQUE_DASHBOARD: '/adminacad/dashboard',
+  ADMINACADEMIQUE_CREATE_RESP_FILIERE: '/adminacad/create_resp_filiere',
+  ADMINACADEMIQUE_RESPONSABLE_FILIERE: '/adminacad/resp_filiere',
+  ADMINACADEMIQUE_RESPONSABLE_FILIERE_DETAILS: '/adminacad/resp_filiere_details',
+  
 };
 
 export const ROLE_PERMISSIONS = {

@@ -770,24 +770,91 @@ const Enrollement = () => {
   const getCentreDepotOptions = () => 
     Array.isArray(options.centresDepot) ? options.centresDepot.map(c => ({ value: c.id, label: `${c.code} - ${c.nom} (${c.ville})` })) : [];
 
+  // Dans ton composant Enrollement.jsx
+// Remplace la section submitSuccess par :
+
+// ✅ IMPORTANT : useEffect AVANT tout return conditionnel
+useEffect(() => {
   if (submitSuccess) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full text-center">
-          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <CheckCircle className="w-10 h-10 text-green-600" />
+    const timer = setTimeout(() => {
+      navigate('/dashboard-candidat');
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }
+}, [submitSuccess, navigate]);
+
+if (submitSuccess) {
+  return (
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full text-center animate-fadeIn">
+        {/* Animation de succès */}
+        <div className="relative w-24 h-24 mx-auto mb-6">
+          <div className="absolute inset-0 bg-green-100 rounded-full animate-ping"></div>
+          <div className="relative w-24 h-24 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center shadow-lg">
+            <CheckCircle className="w-14 h-14 text-white" />
           </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-3">Dossier envoyé !</h2>
-          <p className="text-gray-600 mb-6">Votre inscription a été enregistrée avec succès.</p>
-          <p className="text-gray-600 mb-6">Vous recevrez la un email de réponse dans les 24h à 72h prochaines heures.</p>
-          <button onClick={() => navigate('/home')} className="w-full px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
+        </div>
+
+        <h2 className="text-3xl font-black text-gray-900 mb-3">
+          🎉 Félicitations !
+        </h2>
+        
+        <p className="text-lg text-gray-700 font-semibold mb-2">
+          Votre dossier a été envoyé avec succès
+        </p>
+        
+        <p className="text-gray-600 mb-6">
+          Vous allez recevoir un email de confirmation dans les 24-72h prochaines.
+        </p>
+
+        {/* Barre de progression */}
+        <div className="mb-6">
+          <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+            <div className="bg-gradient-to-r from-green-400 to-green-600 h-2 animate-progress"></div>
+          </div>
+          <p className="text-sm text-gray-500 mt-2">
+            Redirection automatique vers votre espace...
+          </p>
+        </div>
+
+        <div className="space-y-3">
+          <button 
+            onClick={() => navigate('/dashboard-candidat')}
+            className="w-full px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-bold hover:from-indigo-700 hover:to-purple-700 transition-all transform hover:scale-105 shadow-lg"
+          >
+            Accéder à mon espace
+          </button>
+          
+          <button 
+            onClick={() => navigate('/home')}
+            className="w-full px-6 py-3 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 transition-colors"
+          >
             Retour à l'accueil
           </button>
         </div>
       </div>
-    );
-  }
 
+      {/* Animations CSS */}
+      <style jsx>{`
+        @keyframes fadeIn {
+          from { opacity: 0; transform: scale(0.9); }
+          to { opacity: 1; transform: scale(1); }
+        }
+        @keyframes progress {
+          from { width: 0%; }
+          to { width: 100%; }
+        }
+        .animate-fadeIn {
+          animation: fadeIn 0.5s ease-out;
+        }
+        .animate-progress {
+          animation: progress 3s linear forwards;
+        }
+      `}</style>
+    </div>
+  );
+}
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4">
       <div className="max-w-3xl mx-auto">

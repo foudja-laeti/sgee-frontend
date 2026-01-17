@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import quitusService from '../../services/QuitusService';
 
@@ -7,6 +7,15 @@ const QuitusModal = ({ isOpen, onClose }) => {
   const [quitusCode, setQuitusCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  
+  // ✅ DÉTECTER SI L'UTILISATEUR EST CONNECTÉ
+  useEffect(() => {
+    const token = localStorage.getItem('access_token');
+    setIsAuthenticated(!!token);
+    console.log('🔍 Modal - User connecté ?', !!token);
+  }, [isOpen]);
+  
   const handleVerify = async () => {
     if (quitusCode.length !== 6) {
       setError('Le code doit contenir exactement 6 chiffres');
@@ -20,15 +29,26 @@ const QuitusModal = ({ isOpen, onClose }) => {
   
     setLoading(true);
     setError('');
+    
+    console.log('\n🔍 VÉRIFICATION QUITUS');
+    console.log('User authentifié ?', isAuthenticated);
+    console.log('Code:', quitusCode);
   
     try {
-      const result = await quitusService.verifierCode(quitusCode);
+      // ✅ LOGIQUE CORRIGÉE : UTILISER LA BONNE MÉTHODE
+      const result = isAuthenticated 
+        ? await quitusService.verifierCodeAuth(quitusCode)   // ✅ AVEC token
+        : await quitusService.verifierCodePublic(quitusCode); // ✅ SANS token
+      
+      console.log('📨 Résultat:', result);
   
       if (result.success) {
         const { status, message, ...rest } = result.data;
+        console.log('✅ Status:', status);
   
         if (status === 'available') {
-          // Code non utilisé → inscription
+          // Code libre → Inscription
+          console.log('→ Redirection vers /register');
           navigate('/register', {
             state: {
               quitusCode,
@@ -36,8 +56,10 @@ const QuitusModal = ({ isOpen, onClose }) => {
             },
           });
           onClose();
+          
         } else if (status === 'owned') {
-          // Code déjà utilisé par l'utilisateur connecté → enrôlement
+          // Code appartient au user connecté → Enrollment
+          console.log('→ Redirection vers /enrollement');
           navigate('/enrollement', {
             state: {
               quitusCode,
@@ -48,6 +70,7 @@ const QuitusModal = ({ isOpen, onClose }) => {
         }
       } else {
         const err = result.error;
+        console.error('❌ Erreur:', err);
         
         // Gérer le cas où l'utilisateur doit se connecter
         if (err.action === 'login_required') {
@@ -55,7 +78,6 @@ const QuitusModal = ({ isOpen, onClose }) => {
             err.error || 
             'Ce code est déjà utilisé. Veuillez vous connecter si c\'est votre code.'
           );
-          // Optionnel: afficher un bouton "Se connecter" dans le modal
         } else {
           const errorMsg =
             err.error ||
@@ -65,7 +87,7 @@ const QuitusModal = ({ isOpen, onClose }) => {
         }
       }
     } catch (err) {
-      console.error('Erreur vérification quitus:', err);
+      console.error('💥 Exception:', err);
       setError('Erreur de connexion au serveur');
     } finally {
       setLoading(false);
@@ -78,7 +100,19 @@ const QuitusModal = ({ isOpen, onClose }) => {
     onClose();
   };
 
+  const handleLoginRedirect = () => {
+    onClose();
+    navigate('/login', { 
+      state: { 
+        from: 'quitus-verification',
+        quitusCode 
+      } 
+    });
+  };
+
   if (!isOpen) return null;
+
+  const showLoginButton = error && error.includes('connecter');
 
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fadeIn">
@@ -99,6 +133,16 @@ const QuitusModal = ({ isOpen, onClose }) => {
           </button>
         </div>
 
+        {/* Debug Badge (à retirer en prod) */}
+        {process.env.NODE_ENV === 'development' && (
+          <div className={`mb-4 px-3 py-1 rounded-full text-xs font-bold inline-flex items-center gap-2 ${
+            isAuthenticated ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+          }`}>
+            <span className={`w-2 h-2 rounded-full ${isAuthenticated ? 'bg-green-500' : 'bg-gray-400'}`}></span>
+            {isAuthenticated ? 'Connecté' : 'Non connecté'}
+          </div>
+        )}
+
         {/* Info Box */}
         <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-4 mb-6">
           <div className="flex items-start gap-3">
@@ -110,8 +154,10 @@ const QuitusModal = ({ isOpen, onClose }) => {
                 Important
               </p>
               <p className="text-sm text-indigo-700 leading-relaxed">
-                Le code quitus à 6 chiffres se trouve sur votre reçu de paiement bancaire. 
-                Il est obligatoire pour commencer votre inscription.
+                {isAuthenticated 
+                  ? "Vérifiez que ce code quitus vous appartient pour continuer votre enrollment."
+                  : "Le code quitus à 6 chiffres se trouve sur votre reçu de paiement bancaire. Il est obligatoire pour commencer votre inscription."
+                }
               </p>
             </div>
           </div>
@@ -147,7 +193,17 @@ const QuitusModal = ({ isOpen, onClose }) => {
               <svg className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
               </svg>
-              <p className="text-sm text-red-800">{error}</p>
+              <div className="flex-1">
+                <p className="text-sm text-red-800">{error}</p>
+                {showLoginButton && (
+                  <button
+                    onClick={handleLoginRedirect}
+                    className="mt-3 text-sm font-semibold text-red-700 hover:text-red-800 underline"
+                  >
+                    Se connecter maintenant →
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         )}

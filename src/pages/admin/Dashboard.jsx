@@ -119,7 +119,7 @@ const Dashboard = () => {
           })}
         </div>
 
-        // Super Admin → VRAIES données
+        
 {user?.role === 'super_admin' && (
   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
     <div className="bg-white rounded-2xl shadow-md p-6">

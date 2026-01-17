@@ -52,12 +52,16 @@ export const AuthProvider = ({ children }) => {
       const userRole = apiUser?.role;
       console.log('🎭 Role détecté:', userRole);
       
-      if (['super_admin', 'admin_academique'].includes(userRole)) {
+      if (['super_admin', ].includes(userRole)) {
         console.log('➡️ Redirection vers /admin/dashboard');
         navigate('/admin/dashboard', { replace: true });
       } else if (userRole === 'candidat') {
         console.log('➡️ Redirection vers /home');
         navigate('/home', { replace: true });
+      } 
+      else if (userRole === 'admin_academique') {
+        console.log('➡️ Redirection vers /adminacad/dashboard');
+        navigate('/adminacad/dashboard', { replace: true });
       } else if (userRole === 'responsable_filiere') {
   console.log('➡️ Redirection vers /respfiliere/dashboard');
   navigate('/respfiliere/dashboard', { replace: true });  // ← BONNE ROUTE

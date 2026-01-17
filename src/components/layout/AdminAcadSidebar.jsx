@@ -1,27 +1,27 @@
-// src/components/layout/RespFiliereSidebar.jsx
+// src/components/layout/AdminAcadSidebar.jsx
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { 
   LayoutDashboard, UserCheck, Building2, Users,
   BarChart3, FileText, Bell, Settings,
-  GraduationCap, LogOut
+  GraduationCap, LogOut, ChevronRight
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 
-const RespFiliereSidebar = () => {
+const AdminAcadSidebar = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
 
-  // ✅ MENU COMPLET comme AdminAcad (8 items)
+  // On utilise une palette cohérente : Indigo/Slate pour la sobriété
   const menuItems = [
-    { path: '/respfiliere/dashboard', icon: LayoutDashboard, label: 'Tableau de bord' },
-    { path: '/respfiliere/candidats', icon: UserCheck, label: 'Mes Candidats' },
-    { path: '/respfiliere/ma-filiere', icon: Building2, label: 'Ma Filière' },
-    { path: '/respfiliere/statistiques', icon: BarChart3, label: 'Statistiques' },
-    { path: '/respfiliere/rapports', icon: FileText, label: 'Rapports' },
-    { path: '/respfiliere/notifications', icon: Bell, label: 'Notifications' },
-    { path: '/respfiliere/mon-profil', icon: Users, label: 'Mon Profil' },
-    { path: '/respfiliere/parametres', icon: Settings, label: 'Paramètres' }
+    { path: '/adminacad/dashboard', icon: LayoutDashboard, label: 'Tableau de bord' },
+    { path: '/adminacad/responsables-filieres', icon: UserCheck, label: 'Resp. Filières' },
+    { path: '/adminacad/filieres', icon: Building2, label: 'Filières' },
+    { path: '/adminacad/utilisateurs', icon: Users, label: 'Utilisateurs' },
+    { path: '/adminacad/statistiques', icon: BarChart3, label: 'Statistiques' },
+    { path: '/adminacad/rapports', icon: FileText, label: 'Rapports' },
+    { path: '/adminacad/notifications', icon: Bell, label: 'Notifications' },
+    { path: '/adminacad/parametres', icon: Settings, label: 'Paramètres' }
   ];
 
   const handleLogout = async () => {
@@ -35,7 +35,7 @@ const RespFiliereSidebar = () => {
 
   return (
     <div className="w-72 bg-slate-50 border-r border-slate-200 flex flex-col h-screen font-sans">
-      {/* Header : Logo IDENTIQUE AdminAcad */}
+      {/* Header : Logo minimaliste */}
       <div className="p-8">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 bg-indigo-600 rounded-lg flex items-center justify-center shadow-lg shadow-indigo-200">
@@ -43,13 +43,12 @@ const RespFiliereSidebar = () => {
           </div>
           <div>
             <h1 className="text-xl font-bold tracking-tight text-slate-900">SGEE</h1>
-            {/* ✅ CHANGÉ : "Espace Filière" → "Management" */}
             <p className="text-[10px] uppercase tracking-widest font-semibold text-slate-400">Management</p>
           </div>
         </div>
       </div>
 
-      {/* Profil : IDENTIQUE AdminAcad + Filière */}
+      {/* Profil : Carte épurée */}
       <div className="mx-4 mb-6 p-4 bg-white rounded-2xl border border-slate-100 shadow-sm">
         <div className="flex items-center gap-3">
           <div className="relative">
@@ -64,17 +63,13 @@ const RespFiliereSidebar = () => {
             <p className="text-sm font-bold text-slate-800 truncate">
               {user?.prenom} {user?.nom}
             </p>
-            {/* ✅ CHANGÉ : Dynamique avec filière */}
-            <p className="text-xs text-slate-500 truncate font-medium">
-              {user?.filiere?.libelle || 'Responsable Filière'}
-            </p>
+            <p className="text-xs text-slate-500 truncate font-medium">Administrateur Académique</p>
           </div>
         </div>
       </div>
 
-      {/* Navigation : IDENTIQUE AdminAcad */}
+      {/* Navigation : Focus sur l'épurement */}
       <nav className="flex-1 px-4 space-y-1 overflow-y-auto custom-scrollbar">
-        {/* ✅ CHANGÉ : "Gestion" → "Menu Principal" */}
         <p className="px-4 text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Menu Principal</p>
         {menuItems.map((item) => {
           const Icon = item.icon;
@@ -102,14 +97,13 @@ const RespFiliereSidebar = () => {
         })}
       </nav>
 
-      {/* Footer : IDENTIQUE AdminAcad */}
+      {/* Footer : Bouton de sortie discret */}
       <div className="p-4 mt-auto">
         <button
           onClick={handleLogout}
           className="w-full flex items-center gap-3 px-4 py-3 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all duration-200 group"
         >
           <LogOut size={19} className="group-hover:translate-x-1 transition-transform" />
-          {/* ✅ CHANGÉ : "Déconnexion" → "Quitter la session" */}
           <span className="font-semibold text-sm">Quitter la session</span>
         </button>
       </div>
@@ -117,4 +111,4 @@ const RespFiliereSidebar = () => {
   );
 };
 
-export default RespFiliereSidebar;
+export default AdminAcadSidebar;

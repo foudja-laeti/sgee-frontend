@@ -1,11 +1,41 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import QuitusModal from '../../components/common/QuitusModal';
-
+import api from '../../services/api'; 
 const Home = () => {
   const navigate = useNavigate();
   const [showQuitusModal, setShowQuitusModal] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isEnrolled, setIsEnrolled] = useState(false);
+  const [enrollmentData, setEnrollmentData] = useState(null);
+  const [checkingEnrollment, setCheckingEnrollment] = useState(true);
+
+   useEffect(() => {
+    const checkEnrollmentStatus = async () => {
+      const token = localStorage.getItem('access_token');
+      
+      if (!token) {
+        setCheckingEnrollment(false);
+        setIsEnrolled(false);
+        return;
+      }
+
+      try {
+        const response = await api.get('/candidats/check-enrollment/');
+        console.log('📋 Statut enrôlement:', response.data);
+        
+        setIsEnrolled(response.data.is_enrolled);
+        setEnrollmentData(response.data);
+      } catch (error) {
+        console.log('ℹ️ Utilisateur non enrôlé ou non connecté');
+        setIsEnrolled(false);
+      } finally {
+        setCheckingEnrollment(false);
+      }
+    };
+
+    checkEnrollmentStatus();
+  }, []);
 
   // Fonction pour partager via WhatsApp
   const shareOnWhatsApp = () => {
@@ -32,35 +62,45 @@ const Home = () => {
               <span className="text-xl font-bold text-gray-900">SGEE</span>
             </div>
 
-{/* Menu Desktop */}
-<div className="hidden md:flex items-center gap-6">
-  <a href="#accueil" className="text-gray-700 hover:text-indigo-600 font-medium transition-colors">
-    Accueil
-  </a>
-  <button 
-    onClick={() => navigate('/nos-sites')}
-    className="text-gray-700 hover:text-indigo-600 font-medium transition-colors"
-  >
-    Nos sites
-  </button>
-  <button 
-    onClick={() => navigate('/anciennes-epreuves')}
-    className="text-gray-700 hover:text-indigo-600 font-medium transition-colors"
-  >
-    Anciennes épreuves
-  </button>
-  <a href="#faq" className="text-gray-700 hover:text-indigo-600 font-medium transition-colors">
-    FAQ
-  </a>
-  <a href="#contact" className="text-gray-700 hover:text-indigo-600 font-medium transition-colors">
-    Contact
-  </a>
-</div>
-
-
+            {/* Menu Desktop */}
+            <div className="hidden md:flex items-center gap-6">
+              <a href="#accueil" className="text-gray-700 hover:text-indigo-600 font-medium transition-colors">
+                Accueil
+              </a>
+              <button 
+                onClick={() => navigate('/nos-sites')}
+                className="text-gray-700 hover:text-indigo-600 font-medium transition-colors"
+              >
+                Nos sites
+              </button>
+              <button 
+                onClick={() => navigate('/anciennes-epreuves')}
+                className="text-gray-700 hover:text-indigo-600 font-medium transition-colors"
+              >
+                Anciennes épreuves
+              </button>
+              <a href="#faq" className="text-gray-700 hover:text-indigo-600 font-medium transition-colors">
+                FAQ
+              </a>
+              <a href="#contact" className="text-gray-700 hover:text-indigo-600 font-medium transition-colors">
+                Contact
+              </a>
+            </div>
 
             {/* Boutons Desktop */}
             <div className="hidden md:flex items-center gap-3">
+              {/* ✅ BOUTON MON ESPACE - Visible uniquement si enrôlé */}
+              {isEnrolled && !checkingEnrollment && (
+                <button 
+                  onClick={() => navigate('/dashboard-candidat')}
+                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium transition-colors flex items-center gap-2"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+                  </svg>
+                  Mon Espace
+                </button>
+              )}
               
               <button 
                 onClick={() => navigate('/login')}
@@ -86,31 +126,47 @@ const Home = () => {
           </div>
 
           {/* Menu Mobile */}
-{mobileMenuOpen && (
-  <div className="md:hidden mt-4 pb-4 border-t border-gray-200 pt-4">
-    <div className="flex flex-col gap-3">
-      <a href="#accueil" className="text-gray-700 hover:text-indigo-600 font-medium py-2" onClick={() => setMobileMenuOpen(false)}>
-        Accueil
-      </a>
-      <button 
-        onClick={() => { navigate('/nos-sites'); setMobileMenuOpen(false); }}
-        className="text-left text-gray-700 hover:text-indigo-600 font-medium py-2"
-      >
-        Nos sites
-      </button>
-      <button 
-        onClick={() => { navigate('/anciennes-epreuves'); setMobileMenuOpen(false); }}
-        className="text-left text-gray-700 hover:text-indigo-600 font-medium py-2"
-      >
-        Anciennes épreuves
-      </button>
-                
+          {mobileMenuOpen && (
+            <div className="md:hidden mt-4 pb-4 border-t border-gray-200 pt-4">
+              <div className="flex flex-col gap-3">
+                <a href="#accueil" className="text-gray-700 hover:text-indigo-600 font-medium py-2" onClick={() => setMobileMenuOpen(false)}>
+                  Accueil
+                </a>
+                <button 
+                  onClick={() => { navigate('/nos-sites'); setMobileMenuOpen(false); }}
+                  className="text-left text-gray-700 hover:text-indigo-600 font-medium py-2"
+                >
+                  Nos sites
+                </button>
+                <button 
+                  onClick={() => { navigate('/anciennes-epreuves'); setMobileMenuOpen(false); }}
+                  className="text-left text-gray-700 hover:text-indigo-600 font-medium py-2"
+                >
+                  Anciennes épreuves
+                </button>
                 <a href="#faq" className="text-gray-700 hover:text-indigo-600 font-medium py-2" onClick={() => setMobileMenuOpen(false)}>
                   FAQ
                 </a>
                 <a href="#contact" className="text-gray-700 hover:text-indigo-600 font-medium py-2" onClick={() => setMobileMenuOpen(false)}>
                   Contact
                 </a>
+                
+                {/* ✅ BOUTON MON ESPACE MOBILE */}
+                {isEnrolled && !checkingEnrollment && (
+                  <button 
+                    onClick={() => {
+                      navigate('/dashboard-candidat');
+                      setMobileMenuOpen(false);
+                    }}
+                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium transition-colors flex items-center gap-2 justify-center"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+                    </svg>
+                    Mon Espace
+                  </button>
+                )}
+                
                 <button 
                   onClick={shareOnWhatsApp}
                   className="px-4 py-2 text-green-600 border border-green-600 rounded-lg hover:bg-green-50 font-medium transition-colors flex items-center gap-2 justify-center"
@@ -144,6 +200,28 @@ const Home = () => {
               Bienvenue sur notre plateforme d'inscription de{' '}
               <span className="text-indigo-600">SGEE !</span>
             </h1>
+            
+            {/* ✅ MESSAGE PERSONNALISÉ SI ENRÔLÉ */}
+            {isEnrolled && enrollmentData && (
+              <div className="bg-green-50 border-l-4 border-green-600 p-4 mb-6 rounded-r-lg">
+                <p className="text-green-900 font-bold mb-2">
+                  👋 Bon retour, {enrollmentData.nom_complet} !
+                </p>
+                <p className="text-green-800 text-sm mb-3">
+                  Votre matricule : <strong>{enrollmentData.matricule}</strong>
+                </p>
+                <button 
+                  onClick={() => navigate('/dashboard-candidat')}
+                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium transition-colors flex items-center gap-2"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                  </svg>
+                  Accéder à mon espace
+                </button>
+              </div>
+            )}
+            
             
             <p className="text-lg text-gray-600 mb-6">
               Gérez vos inscriptions, suivez vos formations et accédez à vos
@@ -188,18 +266,49 @@ const Home = () => {
               </p>
             </div>
 
-            {/* Bouton Commencer - Centré */}
-            <div className="flex justify-center">
-              <button 
-                onClick={() => setShowQuitusModal(true)}
-                className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-indigo-600 to-blue-600 text-white text-lg font-semibold rounded-lg hover:from-indigo-700 hover:to-blue-700 shadow-lg hover:shadow-xl transition"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
-                </svg>
-                Commencer l'Enrôlement
-              </button>
-            </div>
+         
+
+{/* Bouton Commencer - Centré */}
+<div className="flex justify-center">
+  {isEnrolled ? (
+    // ✅ Si enrôlé : Bouton désactivé avec message
+    <div className="text-center">
+      <button 
+        disabled
+        className="inline-flex items-center gap-2 px-8 py-4 bg-gray-300 text-gray-500 text-lg font-semibold rounded-lg cursor-not-allowed shadow-lg opacity-60"
+      >
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        Déjà Enrôlé
+      </button>
+      <p className="mt-3 text-sm text-gray-600">
+        Vous êtes déjà enrôlé. <button onClick={() => navigate('/dashboard-candidat')} className="text-indigo-600 font-semibold hover:underline">Accédez à votre espace</button>
+      </p>
+    </div>
+  ) : (
+    // ❌ Si non enrôlé : Bouton actif
+    <button 
+      onClick={() => setShowQuitusModal(true)}
+      disabled={checkingEnrollment}
+      className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-indigo-600 to-blue-600 text-white text-lg font-semibold rounded-lg hover:from-indigo-700 hover:to-blue-700 shadow-lg hover:shadow-xl transition disabled:opacity-50 disabled:cursor-not-allowed"
+    >
+      {checkingEnrollment ? (
+        <>
+          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
+          Vérification...
+        </>
+      ) : (
+        <>
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+          </svg>
+          Commencer l'Enrôlement
+        </>
+      )}
+    </button>
+  )}
+</div>
           </div>
 
           {/* Image droite */}

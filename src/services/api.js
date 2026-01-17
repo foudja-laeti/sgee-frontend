@@ -10,13 +10,30 @@ const api = axios.create({
   },
 });
 
+// ✅ Liste des routes publiques (sans token)
+const PUBLIC_ROUTES = [
+  '/auth/login/',
+  '/auth/register/',
+  '/auth/refresh/',
+  '/auth/verify-quitus/'
+];
+
 // Intercepteur pour ajouter le token JWT aux requêtes
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('access_token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+    // ✅ Vérifier si c'est une route publique
+    const isPublicRoute = PUBLIC_ROUTES.some(route => 
+      config.url?.includes(route)
+    );
+    
+    // ✅ Ajouter le token SEULEMENT si ce n'est PAS une route publique
+    if (!isPublicRoute) {
+      const token = localStorage.getItem('access_token');
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
     }
+    
     return config;
   },
   (error) => {
@@ -30,11 +47,12 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    // ✅ NE PAS INTERCEPTER LES ROUTES D'AUTH
-    const authRoutes = ['/auth/login/', '/auth/register/', '/auth/refresh/', '/auth/verify-quitus/'];
-    const isAuthRoute = authRoutes.some(route => originalRequest.url?.includes(route));
+    // ✅ NE PAS INTERCEPTER LES ROUTES PUBLIQUES
+    const isPublicRoute = PUBLIC_ROUTES.some(route => 
+      originalRequest.url?.includes(route)
+    );
     
-    if (isAuthRoute) {
+    if (isPublicRoute) {
       return Promise.reject(error);
     }
 

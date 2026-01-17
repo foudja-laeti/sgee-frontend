@@ -29,7 +29,7 @@ const CandidatDetail = () => {
       setLoading(true);
       console.log(`📋 Chargement candidat ${id}...`);
       
-       const response = await api.get(`/candidats/respfiliere/${id}/candidat_detail/`);
+       const response = await api.get(`/candidats/respfiliere/${id}/candidat-detail/`);
       console.log('✅ Candidat reçu:', response.data);
       
       setCandidat(response.data);
@@ -52,7 +52,7 @@ const CandidatDetail = () => {
       setProcessing(true);
       console.log(`✅ Validation dossier ${id}...`);
       
-       const response = await api.post(`/candidats/respfiliere/${id}/valider_dossier/`);
+       const response = await api.post(`/candidats/respfiliere/${id}/valider-dossier/`);
     
     console.log('✅ Dossier validé:', response.data);
     
@@ -76,7 +76,7 @@ const CandidatDetail = () => {
       setProcessing(true);
       console.log(`❌ Rejet dossier ${id}...`);
       
-       const response = await api.post(`/candidats/respfiliere/${id}/rejeter_dossier/`, {
+       const response = await api.post(`/candidats/respfiliere/${id}/rejeter-dossier/`, {
       motif: motifRejet
     });
       console.log('✅ Dossier rejeté:', response.data);

@@ -1,7 +1,3 @@
-// ============================================
-// 1. MISE À JOUR DE App.jsx
-// ============================================
-// src/App.jsx
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
@@ -9,6 +5,10 @@ import Home from './pages/candidat/Home';
 import CandidatDetail from './pages/respfiliere/CandidatDetail';
 import Login from './pages/Login';
 import ProfilFiliere from './pages/respfiliere/ProfilFiliere';
+import CreateResponsableFiliere from './pages/adminacad/CreateResponsableFiliere'; // ✅ CORRIGÉ
+import Dashboard from './pages/adminacad/Dashboard';
+import ResponsableFiliere from './pages/adminacad/ResponsableFiliere';
+import ResponsableFiliereDetail from './pages/adminacad/ResponsableFiliereDetails';
 import MonProfil from './pages/respfiliere/MonProfil';
 import Register from './pages/Register'; 
 import ArretePremiereAnnee from './pages/candidat/ArretePremiereAnnee';
@@ -18,26 +18,40 @@ import Enrollement from './pages/candidat/Enrollement';
 import NosSites from './pages/candidat/NosSites';
 import AnciennesEpreuves from './pages/candidat/AnciennesEpreuves';
 import ProtectedRoute from './components/common/ProtectedRoute';
-
+import DashboardCandidatPostEnrollment from './pages/candidat/DashboardCandidatPostEnrollment';
+import MonProfile from './pages/candidat/MonProfil';
+import MonDossiers from './pages/candidat/MonDossier';
+import Notifications from './pages/candidat/Notifications';
 // Admin pages
 import AdminDashboard from './pages/admin/Dashboard';
 import AdminUsers from './pages/admin/Users';
 import AdminLogs from './pages/admin/Logs';
 import AdminStatistics from './pages/admin/Statistics';
+import ProgrammeConcours from './pages/candidat/ProgrammeConcours';
+import TestsBlancs from './pages/candidat/TestsBlancs'
 
 // 🆕 Responsable Filière pages
 import RespFiliereDashboard from './pages/respfiliere/Dashboard';
 import RespFiliereCandidats from './pages/respfiliere/Candidats';
 import RespFiliereStatistics from './pages/respfiliere/Statistics';
 import RespFiliereMaFiliere from './pages/respfiliere/MaFiliere';
+import MonDossier from './pages/candidat/MonDossier';
 
+import AdminAcadCandidats from './pages/adminacad/Candidats';
+import AdminAcadFilieres from './pages/adminacad/Filieres';
+import AdminAcadStatistiques from './pages/adminacad/Statistiques';
+import AdminAcadUtilisateurs from './pages/adminacad/Utilisateurs';
+import AdminAcadRapports from './pages/adminacad/Rapports';
+import AdminAcadNotifications from './pages/adminacad/NotificationsManagement';
+import AdminAcadParametres from './pages/adminacad/Parametres';
 function App() {
   return (
     <Router>
       <AuthProvider>
         <Routes>
           {/* Routes publiques */}
-          <Route path="/" element={<Navigate to="/login" replace />} />
+          <Route path="/" element={<Navigate to="/home" replace />} />
+          <Route path="/home" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           
@@ -57,6 +71,8 @@ function App() {
               <ArreteTroisiemeAnnee />
             </ProtectedRoute>
           } />
+          <Route path="/programme-concours" element={<ProgrammeConcours />} />
+<Route path="/tests-blancs" element={<TestsBlancs />} />
           <Route path="/nos-sites" element={
             <ProtectedRoute allowedRoles={['candidat']}>
               <NosSites />
@@ -73,24 +89,80 @@ function App() {
             </ProtectedRoute>
           } />
           
-          {/* Routes Admin (Super Admin + Admin Académique uniquement) */}
+          {/* Routes Admin Académique ✅ CORRIGÉES */}
+          <Route path="/adminacad/dashboard" element={
+            <ProtectedRoute allowedRoles={['admin_academique']}>
+              <Dashboard />
+            </ProtectedRoute>
+          } />
+          <Route path="/adminacad/responsables-filieres" element={
+            <ProtectedRoute allowedRoles={['admin_academique']}>
+              <ResponsableFiliere />
+            </ProtectedRoute>
+          } />
+          <Route path="/adminacad/responsables-filieres/:id" element={
+            <ProtectedRoute allowedRoles={['admin_academique']}>
+              <ResponsableFiliereDetail />
+            </ProtectedRoute>
+          } />
+          <Route path="/adminacad/create-resp_filiere" element={
+            <ProtectedRoute allowedRoles={['admin_academique']}>
+              <CreateResponsableFiliere />
+            </ProtectedRoute>
+          } />
+          <Route path="/adminacad/candidats" element={
+            <ProtectedRoute allowedRoles={['admin_academique']}>
+              <AdminAcadCandidats />
+            </ProtectedRoute>
+          } />
+          <Route path="/adminacad/filieres" element={
+            <ProtectedRoute allowedRoles={['admin_academique']}>
+              <AdminAcadFilieres />
+            </ProtectedRoute>
+          } />
+          <Route path="/adminacad/statistiques" element={
+            <ProtectedRoute allowedRoles={['admin_academique']}>
+              <AdminAcadStatistiques />
+            </ProtectedRoute>
+          }  />
+          <Route path="/adminacad/utilisateurs" element={
+            <ProtectedRoute allowedRoles={['admin_academique']}>
+              <AdminAcadUtilisateurs />
+            </ProtectedRoute>
+          } />
+          <Route path="/adminacad/rapports" element={
+            <ProtectedRoute allowedRoles={['admin_academique']}>
+              <AdminAcadRapports />
+            </ProtectedRoute>
+          } />
+          <Route path="/adminacad/notifications" element={
+            <ProtectedRoute allowedRoles={['admin_academique']}>
+              <AdminAcadNotifications />
+            </ProtectedRoute>
+          } />
+          <Route path="/adminacad/parametres" element={
+            <ProtectedRoute allowedRoles={['admin_academique']}>
+              <AdminAcadParametres />
+            </ProtectedRoute>
+          } />
+          {/* Routes Admin (Super Admin uniquement) */}
           <Route path="/admin/dashboard" element={
-            <ProtectedRoute allowedRoles={['super_admin', 'admin_academique']}>
+            <ProtectedRoute allowedRoles={['super_admin']}>
               <AdminDashboard />
             </ProtectedRoute>
           } />
           <Route path="/admin/users" element={
-            <ProtectedRoute allowedRoles={['super_admin', 'admin_academique']}>
+            <ProtectedRoute allowedRoles={['super_admin']}>
               <AdminUsers />
             </ProtectedRoute>
           } />
           <Route path="/admin/statistics" element={
-            <ProtectedRoute allowedRoles={['super_admin', 'admin_academique']}>
+            <ProtectedRoute allowedRoles={['super_admin']}>
               <AdminStatistics />
             </ProtectedRoute>
           } />
           <Route path="/admin/logs" element={
-            <ProtectedRoute allowedRoles={['super_admin', 'admin_academique']}>
+            <ProtectedRoute allowedRoles={['super_admin']}>
               <AdminLogs />
             </ProtectedRoute>
           } />
@@ -106,22 +178,16 @@ function App() {
               <RespFiliereCandidats />
             </ProtectedRoute>
           } />
-          <Route 
-  path="/respfiliere/profil-filiere" 
-  element={
-    <ProtectedRoute>
-      <ProfilFiliere />
-    </ProtectedRoute>
-  } 
-/>
-
-  <Route path="/respfiliere/Mon-profil" 
-  element={
-    <ProtectedRoute>
-      <MonProfil />
-    </ProtectedRoute>
-  } 
-/>
+          <Route path="/respfiliere/profil-filiere" element={
+            <ProtectedRoute allowedRoles={['responsable_filiere']}>
+              <ProfilFiliere />
+            </ProtectedRoute>
+          } />
+          <Route path="/respfiliere/mon-profil" element={
+            <ProtectedRoute allowedRoles={['responsable_filiere']}>
+              <MonProfil />
+            </ProtectedRoute>
+          } />
           <Route path="/respfiliere/statistics" element={
             <ProtectedRoute allowedRoles={['responsable_filiere']}>
               <RespFiliereStatistics />
@@ -132,14 +198,46 @@ function App() {
               <RespFiliereMaFiliere />
             </ProtectedRoute>
           } />
-          <Route 
-  path="/respfiliere/candidats/:id" 
-  element={
-    <ProtectedRoute>
-      <CandidatDetail />
-    </ProtectedRoute>
-  } 
-/>
+          <Route path="/respfiliere/candidats/:id" element={
+            <ProtectedRoute allowedRoles={['responsable_filiere']}>
+              <CandidatDetail />
+            </ProtectedRoute>
+          } />
+           <Route 
+          path="/dashboard-candidat" 
+          element={
+            <ProtectedRoute>
+              <DashboardCandidatPostEnrollment />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/Mon-profil" 
+          element={
+            <ProtectedRoute>
+              <MonProfile />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/Mon-dossier" 
+          element={
+            <ProtectedRoute>
+              <MonDossiers />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/Notifications" 
+          element={
+            <ProtectedRoute>
+              <Notifications />
+            </ProtectedRoute>
+          } 
+          
+          
+        
+        />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </AuthProvider>
