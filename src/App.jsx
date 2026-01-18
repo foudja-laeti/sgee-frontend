@@ -22,6 +22,7 @@ import DashboardCandidatPostEnrollment from './pages/candidat/DashboardCandidatP
 import MonProfile from './pages/candidat/MonProfil';
 import MonDossiers from './pages/candidat/MonDossier';
 import Notifications from './pages/candidat/Notifications';
+import MicrosoftCallback from './pages/MicrosoftCallback';
 // Admin pages
 import AdminDashboard from './pages/admin/Dashboard';
 import AdminUsers from './pages/admin/Users';
@@ -44,6 +45,8 @@ import AdminAcadUtilisateurs from './pages/adminacad/Utilisateurs';
 import AdminAcadRapports from './pages/adminacad/Rapports';
 import AdminAcadNotifications from './pages/adminacad/NotificationsManagement';
 import AdminAcadParametres from './pages/adminacad/Parametres';
+import CompleteProfile from './pages/CompleteProfile';
+import OAuthQuitusRequired from './pages/OAuthQuitusRequired';
 function App() {
   return (
     <Router>
@@ -54,7 +57,9 @@ function App() {
           <Route path="/home" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-          
+          <Route path="/auth/microsoft/callback" element={<MicrosoftCallback />} />
+          <Route path="/OAuthQuitusRequired" element={<OAuthQuitusRequired />} />
+          <Route path="/complete-profile" element={<CompleteProfile />} />
           {/* Routes candidats */}
           <Route path="/home" element={
             <ProtectedRoute allowedRoles={['candidat']}>
@@ -227,6 +232,7 @@ function App() {
             </ProtectedRoute>
           } 
         />
+        
         <Route 
           path="/Notifications" 
           element={
