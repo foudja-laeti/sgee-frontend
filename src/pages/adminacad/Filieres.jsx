@@ -1,4 +1,3 @@
-// src/pages/adminacad/Filieres.jsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -17,10 +16,12 @@ const Filieres = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingFiliere, setEditingFiliere] = useState(null);
   
+  // ✅ FIX: Valeurs par défaut correctes
   const [formData, setFormData] = useState({
     code: '',
     libelle: '',
-    quota: 100,
+    quota: 100, // ✅ Nombre, pas string
+    description: '',
     is_active: true
   });
 
@@ -34,6 +35,8 @@ const Filieres = () => {
       const res = await adminAcadService.getStatsFilieres();
       if (res.success) {
         setFilieres(Array.isArray(res.data) ? res.data : []);
+      } else {
+        console.error('Erreur chargement:', res.error);
       }
     } catch (error) {
       console.error('Erreur:', error);
@@ -42,25 +45,53 @@ const Filieres = () => {
     }
   };
 
+  // ✅ FIX: Gestion correcte du formulaire
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // ✅ Validation
+    if (!formData.code || !formData.libelle) {
+      alert('Le code et le libellé sont obligatoires');
+      return;
+    }
+
+    // ✅ S'assurer que quota est un nombre
+    const dataToSend = {
+      ...formData,
+      quota: parseInt(formData.quota) || 100
+    };
     
     try {
       let res;
       if (editingFiliere) {
-        res = await adminAcadService.updateFiliere(editingFiliere.id, formData);
+        res = await adminAcadService.updateFiliere(editingFiliere.id, dataToSend);
       } else {
-        res = await adminAcadService.createFiliere(formData);
+        res = await adminAcadService.createFiliere(dataToSend);
       }
 
       if (res.success) {
         alert(editingFiliere ? 'Filière modifiée avec succès' : 'Filière créée avec succès');
         setShowCreateModal(false);
         setEditingFiliere(null);
-        setFormData({ code: '', libelle: '', quota: 100, is_active: true });
+        // ✅ Reset avec des valeurs correctes
+        setFormData({ 
+          code: '', 
+          libelle: '', 
+          quota: 100, 
+          description: '',
+          is_active: true 
+        });
         loadFilieres();
       } else {
-        alert(res.error || 'Erreur lors de l\'enregistrement');
+        // ✅ Afficher les erreurs du serveur
+        if (typeof res.error === 'object') {
+          const errorMsg = Object.entries(res.error)
+            .map(([key, value]) => `${key}: ${value}`)
+            .join('\n');
+          alert(errorMsg);
+        } else {
+          alert(res.error || 'Erreur lors de l\'enregistrement');
+        }
       }
     } catch (error) {
       console.error('Erreur:', error);
@@ -70,10 +101,12 @@ const Filieres = () => {
 
   const handleEdit = (filiere) => {
     setEditingFiliere(filiere);
+    // ✅ S'assurer que quota est un nombre
     setFormData({
       code: filiere.code,
       libelle: filiere.libelle,
-      quota: filiere.quota || 100,
+      quota: parseInt(filiere.quota) || 100,
+      description: filiere.description || '',
       is_active: filiere.is_active
     });
     setShowCreateModal(true);
@@ -129,7 +162,14 @@ const Filieres = () => {
           <button
             onClick={() => {
               setEditingFiliere(null);
-              setFormData({ code: '', libelle: '', quota: 100, is_active: true });
+              // ✅ Reset avec des valeurs correctes
+              setFormData({ 
+                code: '', 
+                libelle: '', 
+                quota: 100, 
+                description: '',
+                is_active: true 
+              });
               setShowCreateModal(true);
             }}
             className="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 flex items-center gap-2 font-medium shadow-md"
@@ -188,7 +228,7 @@ const Filieres = () => {
                     <div
                       className="bg-indigo-600 h-2 rounded-full transition-all"
                       style={{ 
-                        width: `${Math.min((filiere.valides / filiere.quota) * 100, 100)}%` 
+                        width: `${Math.min(((filiere.valides || 0) / (filiere.quota || 1)) * 100, 100)}%` 
                       }}
                     />
                   </div>
@@ -222,12 +262,12 @@ const Filieres = () => {
 
                 {/* Actions */}
                 <div className="flex gap-2 pt-4 border-t">
-                 
                   <button
                     onClick={() => handleEdit(filiere)}
-                    className="px-4 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100"
+                    className="flex-1 px-4 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 flex items-center justify-center gap-2"
                   >
                     <Edit size={16} />
+                    Modifier
                   </button>
                   <button
                     onClick={() => handleDelete(filiere.id)}
@@ -269,10 +309,11 @@ const Filieres = () => {
                   <input
                     type="text"
                     value={formData.code}
-                    onChange={(e) => setFormData({...formData, code: e.target.value})}
+                    onChange={(e) => setFormData({...formData, code: e.target.value.toUpperCase()})}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
                     placeholder="Ex: GI"
                     required
+                    maxLength={20}
                   />
                 </div>
 
@@ -297,10 +338,26 @@ const Filieres = () => {
                   <input
                     type="number"
                     value={formData.quota}
-                    onChange={(e) => setFormData({...formData, quota: parseInt(e.target.value)})}
+                    onChange={(e) => setFormData({...formData, quota: parseInt(e.target.value) || 0})}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
                     min="1"
                     required
+                  />
+                  <p className="mt-1 text-xs text-gray-500">
+                    Nombre de places disponibles
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Description
+                  </label>
+                  <textarea
+                    value={formData.description}
+                    onChange={(e) => setFormData({...formData, description: e.target.value})}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                    placeholder="Description de la filière (optionnel)"
+                    rows={3}
                   />
                 </div>
 
@@ -345,3 +402,4 @@ const Filieres = () => {
 };
 
 export default Filieres;
+

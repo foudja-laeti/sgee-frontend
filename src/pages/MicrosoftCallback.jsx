@@ -1,4 +1,3 @@
-// MicrosoftCallback.jsx
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -7,10 +6,11 @@ import OAuthService from '../services/OAuthService';
 const MicrosoftCallback = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { checkAuth } = useAuth(); // ✅ Utiliser checkAuth au lieu de setUser
+  const { checkAuth } = useAuth();
   const [needsQuitus, setNeedsQuitus] = useState(false);
   const [codeQuitus, setCodeQuitus] = useState('');
   const [userInfo, setUserInfo] = useState(null);
+  const [tempSessionId, setTempSessionId] = useState(null);  // ✅ NOUVEAU
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
 
@@ -33,18 +33,18 @@ const MicrosoftCallback = () => {
       return;
     }
 
-    const result = await OAuthService.loginWithMicrosoft(code, null);
+    // ✅ Premier appel : uniquement avec le code Microsoft
+    const result = await OAuthService.loginWithMicrosoft(code, null, null);
 
     if (result.success) {
-      // ✅ Sauvegarder les tokens
+      // ✅ Connexion réussie
       localStorage.setItem('access_token', result.data.tokens.access);
       localStorage.setItem('refresh_token', result.data.tokens.refresh);
       localStorage.setItem('user', JSON.stringify(result.data.user));
       
-      // ✅ Recharger l'authentification via le contexte
       await checkAuth();
       
-      // ✅ Redirection selon le rôle
+      // Redirection selon le rôle
       const userRole = result.data.user.role;
       console.log('🎭 Rôle détecté:', userRole);
       
@@ -62,12 +62,15 @@ const MicrosoftCallback = () => {
       }
     } else if (result.error?.error === 'code_quitus_required') {
       // ⚠️ Nouvel utilisateur - Code quitus requis
+      console.log('⚠️ Code quitus requis');
+      
       setNeedsQuitus(true);
       setUserInfo(result.error.user_info);
+      setTempSessionId(result.error.temp_session_id);  // ✅ NOUVEAU : Stocker l'ID de session
       setLoading(false);
     } else {
       // ❌ Erreur
-      setError(result.error?.message || 'Erreur de connexion');
+      setError(result.error?.message || result.error?.error || 'Erreur de connexion');
       setLoading(false);
       setTimeout(() => navigate('/login'), 3000);
     }
@@ -78,8 +81,8 @@ const MicrosoftCallback = () => {
     setLoading(true);
     setError('');
 
-    const code = searchParams.get('code');
-    const result = await OAuthService.loginWithMicrosoft(code, codeQuitus);
+    // ✅ NOUVEAU : Deuxième appel avec le temp_session_id et le code quitus
+    const result = await OAuthService.loginWithMicrosoft(null, codeQuitus, tempSessionId);
 
     if (result.success) {
       // ✅ Inscription réussie
@@ -87,10 +90,8 @@ const MicrosoftCallback = () => {
       localStorage.setItem('refresh_token', result.data.tokens.refresh);
       localStorage.setItem('user', JSON.stringify(result.data.user));
       
-      // ✅ Recharger l'authentification
       await checkAuth();
       
-      // Nouveaux utilisateurs = toujours candidats
       navigate('/home', { replace: true });
     } else {
       setError(result.error?.error || 'Code quitus invalide');

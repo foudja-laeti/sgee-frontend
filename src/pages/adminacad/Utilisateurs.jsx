@@ -1,10 +1,11 @@
-// src/pages/adminacad/Utilisateurs.jsx
+// src/pages/adminacad/Utilisateurs.jsx - VERSION COMPLÈTE CORRIGÉE
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Users, Search, Filter, Eye, Edit, Trash2, UserPlus,
+  Users, Search, Filter, Eye, Trash2, UserPlus,
   Mail, Phone, Calendar, Shield, CheckCircle, XCircle,
-  RefreshCw, Download, Key, ToggleLeft, ToggleRight
+  RefreshCw, Download, Key, ToggleLeft, ToggleRight,
+  FileSpreadsheet, FileText, ChevronDown
 } from 'lucide-react';
 import AdminAcadLayout from '../../components/layout/AdminAcadLayout';
 import adminAcadService from '../../services/adminAcadService';
@@ -17,6 +18,8 @@ const Utilisateurs = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterRole, setFilterRole] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
+  const [showExportMenu, setShowExportMenu] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const [stats, setStats] = useState({
     total: 0,
     actifs: 0,
@@ -29,6 +32,18 @@ const Utilisateurs = () => {
   useEffect(() => {
     loadUsers();
   }, [filterRole, filterStatus]);
+
+  // Fermer le menu d'export quand on clique ailleurs
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (showExportMenu && !event.target.closest('.export-menu-container')) {
+        setShowExportMenu(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showExportMenu]);
 
   const loadUsers = async () => {
     setLoading(true);
@@ -56,6 +71,32 @@ const Utilisateurs = () => {
       console.error('Erreur:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleExport = async (format) => {
+    setExporting(true);
+    setShowExportMenu(false);
+    
+    try {
+      const filters = {};
+      if (filterRole !== 'all') filters.role = filterRole;
+      if (filterStatus !== 'all') filters.is_active = filterStatus;
+      
+      console.log('🔄 Export demandé:', format, filters);
+      
+      const res = await adminAcadService.exportUsers(format, filters);
+      
+      if (res.success) {
+        alert(`Export ${format.toUpperCase()} réussi !`);
+      } else {
+        alert(res.error || 'Erreur lors de l\'export');
+      }
+    } catch (error) {
+      console.error('Erreur export:', error);
+      alert('Erreur lors de l\'export');
+    } finally {
+      setExporting(false);
     }
   };
 
@@ -134,6 +175,16 @@ const Utilisateurs = () => {
     );
   };
 
+  const getRoleLabel = () => {
+    const labels = {
+      super_admin: 'Super Admins',
+      admin_academique: 'Admins Académiques',
+      responsable_filiere: 'Responsables de Filière',
+      candidat: 'Candidats'
+    };
+    return labels[filterRole] || 'tous les utilisateurs';
+  };
+
   const filteredUsers = users.filter(user => {
     const searchLower = searchTerm.toLowerCase();
     return (
@@ -170,18 +221,77 @@ const Utilisateurs = () => {
           <div className="flex gap-3">
             <button
               onClick={() => navigate('/adminacad/create-resp_filiere')}
-              className="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 flex items-center gap-2 font-medium shadow-md"
+              className="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 flex items-center gap-2 font-medium shadow-md transition-colors"
             >
               <UserPlus size={20} />
               Nouveau Responsable
             </button>
-            <button
-              onClick={() => adminAcadService.exportUsers()}
-              className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-2 font-medium shadow-md"
-            >
-              <Download size={20} />
-              Exporter
-            </button>
+            
+            {/* Menu d'export avec choix Excel/PDF */}
+            <div className="relative export-menu-container">
+              <button
+                onClick={() => setShowExportMenu(!showExportMenu)}
+                disabled={exporting}
+                className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-2 font-medium shadow-md disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                {exporting ? (
+                  <>
+                    <RefreshCw size={20} className="animate-spin" />
+                    Export en cours...
+                  </>
+                ) : (
+                  <>
+                    <Download size={20} />
+                    Exporter
+                    <ChevronDown size={16} className={`transition-transform ${showExportMenu ? 'rotate-180' : ''}`} />
+                  </>
+                )}
+              </button>
+              
+              {/* Dropdown Menu */}
+              {showExportMenu && !exporting && (
+                <div className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-xl border border-gray-200 z-50 overflow-hidden">
+                  <div className="px-4 py-3 bg-gray-50 border-b border-gray-200">
+                    <p className="text-xs font-semibold text-gray-700 uppercase">
+                      Choisir le format
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {filterRole !== 'all' ? `Exporter: ${getRoleLabel()}` : 'Exporter tous les utilisateurs'}
+                    </p>
+                  </div>
+                  
+                  <button
+                    onClick={() => handleExport('excel')}
+                    className="w-full px-4 py-3 text-left hover:bg-green-50 flex items-center gap-3 border-b border-gray-100 transition-colors"
+                  >
+                    <div className="p-2 bg-green-100 rounded-lg">
+                      <FileSpreadsheet size={20} className="text-green-600" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-medium text-gray-900">Excel (.xlsx)</p>
+                      <p className="text-xs text-gray-500">
+                        Format tableur avec mise en forme
+                      </p>
+                    </div>
+                  </button>
+                  
+                  <button
+                    onClick={() => handleExport('pdf')}
+                    className="w-full px-4 py-3 text-left hover:bg-red-50 flex items-center gap-3 transition-colors"
+                  >
+                    <div className="p-2 bg-red-100 rounded-lg">
+                      <FileText size={20} className="text-red-600" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-medium text-gray-900">PDF (.pdf)</p>
+                      <p className="text-xs text-gray-500">
+                        Document imprimable professionnel
+                      </p>
+                    </div>
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
@@ -234,7 +344,7 @@ const Utilisateurs = () => {
                 placeholder="Rechercher un utilisateur..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
               />
             </div>
 
@@ -243,7 +353,7 @@ const Utilisateurs = () => {
               <select
                 value={filterRole}
                 onChange={(e) => setFilterRole(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
               >
                 <option value="all">Tous les rôles</option>
                 <option value="super_admin">Super Admin</option>
@@ -258,7 +368,7 @@ const Utilisateurs = () => {
               <select
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
               >
                 <option value="all">Tous les statuts</option>
                 <option value="active">Actifs</option>
@@ -287,22 +397,22 @@ const Utilisateurs = () => {
               <table className="w-full">
                 <thead className="bg-gray-50 border-b border-gray-200">
                   <tr>
-                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase">
+                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                       Utilisateur
                     </th>
-                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase">
+                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                       Contact
                     </th>
-                    <th className="px-6 py-4 text-center text-xs font-bold text-gray-600 uppercase">
+                    <th className="px-6 py-4 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">
                       Rôle
                     </th>
-                    <th className="px-6 py-4 text-center text-xs font-bold text-gray-600 uppercase">
+                    <th className="px-6 py-4 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">
                       Statut
                     </th>
-                    <th className="px-6 py-4 text-center text-xs font-bold text-gray-600 uppercase">
+                    <th className="px-6 py-4 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">
                       Inscription
                     </th>
-                    <th className="px-6 py-4 text-center text-xs font-bold text-gray-600 uppercase">
+                    <th className="px-6 py-4 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">
                       Actions
                     </th>
                   </tr>
@@ -312,7 +422,7 @@ const Utilisateurs = () => {
                     <tr key={user.id} className="hover:bg-gray-50 transition-colors">
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
-                          <div className="h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center">
+                          <div className="h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center flex-shrink-0">
                             <Users className="h-5 w-5 text-indigo-600" />
                           </div>
                           <div>
@@ -343,7 +453,7 @@ const Utilisateurs = () => {
                       <td className="px-6 py-4 text-center">
                         <button
                           onClick={() => handleToggleActive(user.id, user.is_active)}
-                          className="flex items-center justify-center gap-2 mx-auto"
+                          className="flex items-center justify-center gap-2 mx-auto transition-colors hover:opacity-80"
                         >
                           {user.is_active ? (
                             <>
@@ -402,6 +512,9 @@ const Utilisateurs = () => {
           <div className="flex items-center justify-between bg-white rounded-lg shadow-md p-4 border border-gray-200">
             <p className="text-sm text-gray-600">
               Affichage de <span className="font-semibold">{filteredUsers.length}</span> utilisateur(s)
+              {filterRole !== 'all' && (
+                <span className="text-indigo-600"> • Filtre: {getRoleLabel()}</span>
+              )}
             </p>
           </div>
         )}

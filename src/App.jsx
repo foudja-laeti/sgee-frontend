@@ -47,6 +47,11 @@ import AdminAcadNotifications from './pages/adminacad/NotificationsManagement';
 import AdminAcadParametres from './pages/adminacad/Parametres';
 import CompleteProfile from './pages/CompleteProfile';
 import OAuthQuitusRequired from './pages/OAuthQuitusRequired';
+import ChatbotSGEE from './pages/candidat/ChatbotSGEE';
+import ManualViewer from './pages/ManualViewer';
+import ManualViewerAdminAcad from './pages/ManualViewerAdminAcad';
+import ManuelRedirect from './pages/ManuelRedirect';
+
 function App() {
   return (
     <Router>
@@ -71,6 +76,38 @@ function App() {
               <ArretePremiereAnnee />
             </ProtectedRoute>
           } />
+          <Route path="/ChatbotSGEE" element={
+            <ProtectedRoute allowedRoles={['candidat']}>
+              <ChatbotSGEE />
+            </ProtectedRoute>
+          } />
+         {/* ✅ ROUTE MANUEL UNIQUE - Accessible à tous les utilisateurs connectés */}
+         <Route 
+  path="/manuel/candidat" 
+  element={
+    <ProtectedRoute allowedRoles={['candidat']}>
+      <ManualViewer />
+    </ProtectedRoute>
+  } 
+/>
+ <Route 
+  path="/manuelRedirect" 
+  element={
+    <ProtectedRoute allowedRoles={['candidat']}>
+      <ManuelRedirect />
+    </ProtectedRoute>
+  } 
+/>
+<Route 
+  path="/manuel/admin-academique" 
+  element={
+    <ProtectedRoute allowedRoles={['admin_academique', 'super_admin', 'responsable_filiere']}>
+      <ManualViewerAdminAcad />
+    </ProtectedRoute>
+  } 
+/>
+
+ 
           <Route path="/arrete-troisieme-annee" element={
             <ProtectedRoute allowedRoles={['candidat']}>
               <ArreteTroisiemeAnnee />

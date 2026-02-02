@@ -1,5 +1,6 @@
 // src/pages/adminacad/Dashboard.jsx
 import React, { useState, useEffect } from 'react';
+import BoutonManuel from '../../components/ManualButton';
 import { useNavigate } from 'react-router-dom';
 import {
   Users, Award, FileText, AlertTriangle, TrendingUp, TrendingDown,
@@ -279,7 +280,7 @@ const Dashboard = () => {
             </h1>
             <p className="text-gray-600 flex items-center gap-2">
               <Calendar size={16} />
-              Session 2025 - Vue d'ensemble administrative
+              Session 2026 - Vue d'ensemble administrative
             </p>
           </div>
           
@@ -545,7 +546,10 @@ const Dashboard = () => {
           </div>
         )}
       </div>
+      <BoutonManuel />
+      
     </AdminAcadLayout>
+    
   );
 };
 

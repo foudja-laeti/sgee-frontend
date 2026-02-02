@@ -1,5 +1,6 @@
 // src/pages/respfiliere/Dashboard.jsx - VERSION RÉELLE BACKEND DJANGO
 import { useState, useEffect } from 'react';
+import BoutonManuel from '../../components/ManualButton';
 import { 
   Users, TrendingUp, FileText, Clock, GraduationCap, AlertCircle, 
   ChevronRight, CheckCircle, XCircle, RefreshCw, Bell, Target, 
@@ -444,9 +445,12 @@ const Dashboard = () => {
               </div>
             </div>
           </div>
+          
         )}
       </div>
+      <BoutonManuel />
     </AdminLayout>
+     
   );
 };
 

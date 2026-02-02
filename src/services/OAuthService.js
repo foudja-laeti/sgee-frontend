@@ -1,8 +1,11 @@
-// src/services/OAuthService.js
-import api from './api'; // ← ADD THIS LINE
+// src/services/OAuthService.js - VERSION CORRIGÉE
+import api from './api';
 
 class OAuthService {
   
+  /**
+   * Initialiser le SDK Google Sign-In
+   */
   initGoogleSignIn() {
     return new Promise((resolve, reject) => {
       if (window.google) {
@@ -20,16 +23,32 @@ class OAuthService {
     });
   }
 
-  // ✅ Ajout du paramètre codeQuitus
-  async loginWithGoogle(credential, codeQuitus = null) {
+  /**
+   * Connexion avec Google OAuth
+   * @param {string} credential - Token Google
+   * @param {string|null} codeQuitus - Code quitus (pour nouveaux utilisateurs)
+   * @param {string|null} tempSessionId - ID de session temporaire (pour nouveaux utilisateurs)
+   */
+  async loginWithGoogle(credential, codeQuitus = null, tempSessionId = null) {
     try {
       const payload = { token: credential };
+      
       if (codeQuitus) {
         payload.code_quitus = codeQuitus;
       }
+      
+      if (tempSessionId) {
+        payload.temp_session_id = tempSessionId;
+      }
 
+      console.log('📡 Envoi requête Google OAuth:', payload);
+      
       const response = await api.post('/auth/oauth/google/', payload);
-      return { success: true, data: response.data };
+      
+      return { 
+        success: true, 
+        data: response.data 
+      };
     } catch (error) {
       console.error('❌ Google OAuth Error:', error);
       return {
@@ -39,22 +58,39 @@ class OAuthService {
     }
   }
 
-  // ✅ Ajout du paramètre codeQuitus
-  async loginWithMicrosoft(code, codeQuitus = null) {
+  /**
+   * Connexion avec Microsoft OAuth
+   * @param {string|null} code - Code Microsoft (premier appel)
+   * @param {string|null} codeQuitus - Code quitus (deuxième appel)
+   * @param {string|null} tempSessionId - ID de session temporaire (deuxième appel)
+   */
+  async loginWithMicrosoft(code = null, codeQuitus = null, tempSessionId = null) {
     try {
       const redirectUri = `${window.location.origin}/auth/microsoft/callback`;
       
-      const payload = { 
-        code: code,
-        redirect_uri: redirectUri
+      const payload = {
+        redirect_uri: redirectUri,
       };
       
-      if (codeQuitus) {
-        payload.code_quitus = codeQuitus;
+      // ✅ Premier appel : code Microsoft seulement
+      if (code) {
+        payload.code = code;
       }
       
+      // ✅ Deuxième appel : code quitus + session ID
+      if (codeQuitus && tempSessionId) {
+        payload.code_quitus = codeQuitus;
+        payload.temp_session_id = tempSessionId;
+      }
+      
+      console.log('📡 Envoi requête Microsoft OAuth:', payload);
+      
       const response = await api.post('/auth/oauth/microsoft/', payload);
-      return { success: true, data: response.data };
+      
+      return { 
+        success: true, 
+        data: response.data 
+      };
     } catch (error) {
       console.error('❌ Microsoft OAuth Error:', error);
       return {
@@ -64,9 +100,13 @@ class OAuthService {
     }
   }
 
+  /**
+   * Générer l'URL d'authentification Microsoft
+   * @returns {string} URL de redirection Microsoft
+   */
   getMicrosoftAuthUrl() {
     const clientId = import.meta.env.VITE_MICROSOFT_CLIENT_ID;
-    const redirectUri = 'http://localhost:5173/auth/microsoft/callback';
+    const redirectUri = `${window.location.origin}/auth/microsoft/callback`;
     const encodedRedirectUri = encodeURIComponent(redirectUri);
     const scope = encodeURIComponent('User.Read');
     
@@ -79,8 +119,29 @@ class OAuthService {
       `prompt=select_account`;
   }
 
+  /**
+   * Récupérer le Client ID Google depuis les variables d'environnement
+   * @returns {string} Client ID Google
+   */
   getGoogleClientId() {
     return import.meta.env.VITE_GOOGLE_CLIENT_ID;
+  }
+
+  /**
+   * Vérifier si les variables d'environnement OAuth sont configurées
+   * @returns {object} État de configuration
+   */
+  checkOAuthConfig() {
+    return {
+      google: {
+        configured: !!import.meta.env.VITE_GOOGLE_CLIENT_ID,
+        clientId: import.meta.env.VITE_GOOGLE_CLIENT_ID || 'Non configuré'
+      },
+      microsoft: {
+        configured: !!import.meta.env.VITE_MICROSOFT_CLIENT_ID,
+        clientId: import.meta.env.VITE_MICROSOFT_CLIENT_ID || 'Non configuré'
+      }
+    };
   }
 }
 

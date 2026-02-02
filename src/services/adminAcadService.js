@@ -195,73 +195,139 @@ getResponsablesFilieres: async (filters = {}) => {
   },
 
   // ==================== FILIÈRES ====================
-  
-  getFilieres: async () => {
-    try {
-      const response = await api.get('/auth/filieres/');
-      return {
-        success: true,
-        data: Array.isArray(response.data) ? response.data : []
-      };
-    } catch (error) {
-      console.error('❌ Erreur getFilieres:', error);
-      return {
-        success: false,
-        data: [],
-        error: error.response?.data?.error || 'Erreur'
-      };
-    }
-  },
+  // Dans src/services/adminAcadService.js
 
-  createFiliere: async (data) => {
-    try {
-      const response = await api.post('/auth/filieres/create/', data);
-      return {
-        success: true,
-        data: response.data,
-        message: 'Filière créée avec succès'
-      };
-    } catch (error) {
-      console.error('❌ Erreur createFiliere:', error);
-      return {
-        success: false,
-        error: error.response?.data?.error || 'Erreur'
-      };
+getFilieres: async () => {
+  try {
+    console.log('🔄 Appel API: /auth/filieres/');
+    
+    const response = await api.get('/auth/filieres/');
+    
+    console.log('📥 Réponse brute:', response);
+    console.log('📥 Données:', response.data);
+    
+    // ✅ Gérer les deux formats possibles
+    let filieresArray;
+    
+    if (Array.isArray(response.data)) {
+      // Format direct: [...]
+      filieresArray = response.data;
+    } else if (response.data.filieres) {
+      // Format objet: { filieres: [...], count: X }
+      filieresArray = response.data.filieres;
+    } else if (response.data.data) {
+      // Format objet: { data: [...] }
+      filieresArray = response.data.data;
+    } else {
+      // Fallback
+      filieresArray = [];
     }
-  },
+    
+    console.log('✅ Filières formatées:', filieresArray);
+    
+    return {
+      success: true,
+      data: filieresArray
+    };
+  } catch (error) {
+    console.error('❌ Erreur getFilieres:', error);
+    console.error('❌ Response:', error.response);
+    console.error('❌ Data:', error.response?.data);
+    
+    return {
+      success: false,
+      data: [],
+      error: error.response?.data?.error || error.message || 'Erreur'
+    };
+  }
+},
 
-  updateFiliere: async (id, data) => {
-    try {
-      const response = await api.put(`/auth/filieres/${id}/update/`, data);
-      return {
-        success: true,
-        data: response.data,
-        message: 'Filière modifiée avec succès'
-      };
-    } catch (error) {
-      console.error('❌ Erreur updateFiliere:', error);
-      return {
-        success: false,
-        error: error.response?.data?.error || 'Erreur'
-      };
-    }
-  },
+// ✅ AJOUTER cette méthode (manquante)
+createFiliere: async (data) => {
+  try {
+    console.log('🔄 Création filière:', data);
+    
+    const response = await api.post('/auth/filieres/', {
+      code: data.code,
+      libelle: data.libelle,
+      quota: parseInt(data.quota) || 100,
+      description: data.description || '',
+      is_active: data.is_active !== undefined ? data.is_active : true
+    });
+    
+    console.log('✅ Filière créée:', response.data);
+    
+    return {
+      success: true,
+      data: response.data,
+      message: 'Filière créée avec succès'
+    };
+  } catch (error) {
+    console.error('❌ Erreur createFiliere:', error);
+    console.error('❌ Response:', error.response?.data);
+    
+    return {
+      success: false,
+      error: error.response?.data || 'Erreur lors de la création'
+    };
+  }
+},
 
-  deleteFiliere: async (id) => {
-    try {
-      const response = await api.delete(`/auth/filieres/${id}/delete/`);
-      return {
-        success: true,
-        message: 'Filière supprimée avec succès'
-      };
-    } catch (error) {
-      console.error('❌ Erreur deleteFiliere:', error);
-      return {
-        success: false,
-        error: error.response?.data?.error || 'Erreur'
-      };
-    }
-  },
+// ✅ AJOUTER cette méthode (manquante)
+updateFiliere: async (id, data) => {
+  try {
+    console.log('🔄 Modification filière:', id, data);
+    
+    const response = await api.put(`/auth/filieres/${id}/`, {
+      code: data.code,
+      libelle: data.libelle,
+      quota: parseInt(data.quota) || 100,
+      description: data.description || '',
+      is_active: data.is_active !== undefined ? data.is_active : true
+    });
+    
+    console.log('✅ Filière modifiée:', response.data);
+    
+    return {
+      success: true,
+      data: response.data,
+      message: 'Filière modifiée avec succès'
+    };
+  } catch (error) {
+    console.error('❌ Erreur updateFiliere:', error);
+    console.error('❌ Response:', error.response?.data);
+    
+    return {
+      success: false,
+      error: error.response?.data || 'Erreur lors de la modification'
+    };
+  }
+},
+
+// ✅ AJOUTER cette méthode (manquante)
+deleteFiliere: async (id) => {
+  try {
+    console.log('🔄 Suppression filière:', id);
+    
+    const response = await api.delete(`/auth/filieres/${id}/`);
+    
+    console.log('✅ Filière supprimée');
+    
+    return {
+      success: true,
+      message: 'Filière supprimée avec succès'
+    };
+  } catch (error) {
+    console.error('❌ Erreur deleteFiliere:', error);
+    console.error('❌ Response:', error.response?.data);
+    
+    return {
+      success: false,
+      error: error.response?.data?.error || 'Erreur lors de la suppression'
+    };
+  }
+},
+
 
   // ==================== CANDIDATS ====================
   
@@ -303,30 +369,6 @@ getResponsablesFilieres: async (filters = {}) => {
     }
   },
 
-  exportCandidats: async (filiereId = null) => {
-    try {
-      const url = filiereId 
-        ? `/candidats/export/?filiere_id=${filiereId}`
-        : '/candidats/export/';
-      
-      const response = await api.get(url, {
-        responseType: 'blob'
-      });
-      
-      const downloadUrl = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement('a');
-      link.href = downloadUrl;
-      link.setAttribute('download', `candidats_${new Date().toISOString().split('T')[0]}.csv`);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      
-      return { success: true };
-    } catch (error) {
-      console.error('❌ Erreur exportCandidats:', error);
-      return { success: false, error: 'Erreur lors de l\'export' };
-    }
-  },
 
   // ==================== UTILISATEURS ====================
   
@@ -424,43 +466,84 @@ getResponsablesFilieres: async (filters = {}) => {
 
   // ==================== UTILISATEURS ====================
 
-  deleteUser: async (id) => {
-    try {
-      const response = await api.delete(`/auth/users/delete/${id}/`);
-      return {
-        success: true,
-        message: 'Utilisateur supprimé avec succès'
-      };
-    } catch (error) {
-      console.error('❌ Erreur deleteUser:', error);
-      return {
-        success: false,
-        error: error.response?.data?.error || 'Erreur'
-      };
+deleteUser: async (id) => {
+  try {
+    // ✅ CORRECTION: Envoyer un body vide pour éviter les erreurs 400
+    const response = await api.delete(`/auth/users/delete/${id}/`, {
+      data: {}  // Ajouter un objet vide comme data
+    });
+    return {
+      success: true,
+      message: response.data?.message || 'Utilisateur supprimé avec succès'
+    };
+  } catch (error) {
+    console.error('❌ Erreur deleteUser:', error);
+    
+    // Meilleure gestion des erreurs
+    const errorMessage = error.response?.data?.error 
+                      || error.response?.data?.message 
+                      || error.message 
+                      || 'Erreur lors de la suppression';
+    
+    return {
+      success: false,
+      error: errorMessage
+    };
+  }
+},
+  exportUsers: async (format = 'excel', filters = {}) => {
+  try {
+    console.log(`🔄 Export utilisateurs en ${format}...`, filters);
+    
+    // Construire les paramètres de requête
+    const params = new URLSearchParams();
+    if (filters.role && filters.role !== 'all') {
+      params.append('role', filters.role);
     }
-  },
-
-  exportUsers: async () => {
-    try {
-      const response = await api.get('/candidats/adminacad/export-users/',  {
-        responseType: 'blob'
-      });
-      
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', `utilisateurs_${new Date().toISOString().split('T')[0]}.csv`);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      
-      return { success: true };
-    } catch (error) {
-      console.error('❌ Erreur exportUsers:', error);
-      return { success: false, error: 'Erreur lors de l\'export' };
+    if (filters.is_active && filters.is_active !== 'all') {
+      params.append('is_active', filters.is_active);
     }
-  },
-
+    
+    // Choisir l'endpoint selon le format
+    const endpoint = format === 'pdf' 
+      ? '/candidats/admin-academique/export-users-pdf/' 
+      : '/candidats/admin-academique/export-users/';
+    
+    const url = `${endpoint}?${params.toString()}`;
+    console.log('📡 URL:', url);
+    
+    const response = await api.get(url, {
+      responseType: 'blob'
+    });
+    
+    console.log('✅ Fichier reçu:', response);
+    
+    // Déterminer l'extension du fichier
+    const extension = format === 'pdf' ? 'pdf' : 'xlsx';
+    const roleLabel = filters.role && filters.role !== 'all' ? `_${filters.role}` : '';
+    const filename = `utilisateurs${roleLabel}_${new Date().toISOString().split('T')[0]}.${extension}`;
+    
+    // Créer le téléchargement
+    const downloadUrl = window.URL.createObjectURL(new Blob([response.data]));
+    const link = document.createElement('a');
+    link.href = downloadUrl;
+    link.setAttribute('download', filename);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(downloadUrl);
+    
+    console.log(`✅ Export ${format} réussi:`, filename);
+    return { success: true };
+  } catch (error) {
+    console.error('❌ Erreur exportUsers:', error);
+    console.error('❌ Response:', error.response);
+    return { 
+      success: false, 
+      error: error.response?.data?.error || 'Erreur lors de l\'export' 
+    };
+  }
+},
   // ==================== RAPPORTS ====================
 
   exportStatsFilieres: async () => {
