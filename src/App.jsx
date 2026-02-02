@@ -35,7 +35,7 @@ import TestsBlancs from './pages/candidat/TestsBlancs'
 import RespFiliereDashboard from './pages/respfiliere/Dashboard';
 import RespFiliereCandidats from './pages/respfiliere/Candidats';
 import RespFiliereStatistics from './pages/respfiliere/Statistics';
-import RespFiliereMaFiliere from './pages/respfiliere/MaFiliere';
+
 import MonDossier from './pages/candidat/MonDossier';
 
 import AdminAcadCandidats from './pages/adminacad/Candidats';
@@ -235,11 +235,7 @@ function App() {
               <RespFiliereStatistics />
             </ProtectedRoute>
           } />
-          <Route path="/respfiliere/ma-filiere" element={
-            <ProtectedRoute allowedRoles={['responsable_filiere']}>
-              <RespFiliereMaFiliere />
-            </ProtectedRoute>
-          } />
+          
           <Route path="/respfiliere/candidats/:id" element={
             <ProtectedRoute allowedRoles={['responsable_filiere']}>
               <CandidatDetail />
