@@ -35,7 +35,7 @@ import TestsBlancs from './pages/candidat/TestsBlancs'
 import RespFiliereDashboard from './pages/respfiliere/Dashboard';
 import RespFiliereCandidats from './pages/respfiliere/Candidats';
 import RespFiliereStatistics from './pages/respfiliere/Statistics';
-import MaFiliere from './pages/respfiliere/MaFiliere';
+import MaFiliere from './pages/respfiliere/Mafiliere';
 import MonDossier from './pages/candidat/MonDossier';
 
 import AdminAcadCandidats from './pages/adminacad/Candidats';
